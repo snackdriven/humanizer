@@ -88,7 +88,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 
 > "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
 
-## 33 Patterns Detected (with Before/After Examples)
+## 45 Patterns Detected (with Before/After Examples)
 
 ### Content Patterns
 
@@ -148,6 +148,23 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | 24 | **Excessive hedging** | "could potentially possibly" | "may" |
 | 25 | **Generic conclusions** | "The future looks bright" | Specific plans or facts |
 
+### Machine-Artifact, Structural, and Model-Specific Tells (2024-2026)
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 34 | **Machine-artifact / token leakage** | "opened in 2019 :contentReference[oaicite:3]{index=3}" | Delete the retrieval/citation plumbing |
+| 35 | **Markdown on a non-markdown surface** | raw `**bold**` / `[x](url)` in a plain-text field | Strip the markup for the destination |
+| 36 | **Skipped heading levels / decorative rules** | H2 then H4; `---` before every heading | Real hierarchy, cut ornamental rules |
+| 37 | **Fabricated citation apparatus** | fake DOIs, refs never cited, dead links | A real checkable cite or none |
+| 38 | **Model-specific emoji fingerprint** | "✅ ... 🧠 ... 🔹 ..." (ChatGPT cluster) | Remove |
+| 39 | **Stance-avoidance** | "on one hand... ultimately it depends" | Take the position |
+| 40 | **Bullet avalanche** | relational prose flattened into bullets | Write the connective prose |
+| 41 | **Uniform shape / low burstiness** | every paragraph the same length and shape | Let length follow content |
+| 42 | **Self-answered rhetorical question** | "What does this mean? It means X." | State it directly |
+| 43 | **Engagement-bait closers** | "What's your take? Drop it below 👇" | End when the content ends |
+| 44 | **Forced-slang overshoot** | "chef's kiss, it's giving main-character energy" | Say the plain thing |
+| 45 | **Colon-drama and arrow tics** | "The result: chaos. fetch → transform → store" | Use sentences |
+
 ## Full Example
 
 **Before (AI-sounding):**
@@ -183,6 +200,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 
 ## Version History
 
+- **2.8.0+kayla** - Fork additions on top of upstream 2.8.0: machine-artifact / retrieval-token-leakage detection, markdown-bleed, structural tells (bullet avalanche, low burstiness, skipped headings), model-specific tics (emoji fingerprint, stance-avoidance), interaction tells (self-answered questions, engagement-bait closers), forced-slang, and colon/arrow drama (#34-45). Added a Recalibration section demoting em-dash, the delve-cluster, and hedging as decayed post-2024 signals. 45 patterns total.
 - **2.8.0** - Added style/cadence patterns #31-33 for manufactured punchlines, aphorism formulas, and conversational rhetorical openers; expanded #20 to catch offer-to-continue chatbot closers. 33 patterns total.
 - **2.7.0** - Added pattern #30 (diff-anchored writing); made em/en dashes a hard cut rather than "overuse"; expanded #21 to cover speculative gap-filling ("maintains a low profile"). 30 patterns total.
 - **2.6.0** - Cleanup pass: consolidated the duplicated workflow sections, gated the personality guidance to content where voice is wanted, removed the model-fingerprinting subsection, and condensed the worked example. No change to the 29 patterns.

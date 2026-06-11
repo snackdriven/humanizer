@@ -1,6 +1,6 @@
 ---
 name: humanizer
-version: 2.8.0
+version: 2.8.0+kayla
 description: Remove signs of AI-generated writing from text. Use when editing drafts for Jira, Slack, email, or docs to make them sound natural and human-written. Based on Wikipedia's AI writing patterns guide.
 license: MIT
 compatibility: claude-code opencode
@@ -479,7 +479,7 @@ Before returning the final rewrite, scan it for `—` and `–`. Any hit means t
 
 ### 31. Manufactured Punchlines and Staccato Drama
 
-**Problem:** LLMs often make every sentence land like a quotable closer, then stack short declarative fragments to manufacture drama. A single short sentence for emphasis is fine; a run of them starts to sound engineered.
+**Problem:** LLMs often make every sentence land like a quotable closer, then stack short declarative fragments to manufacture drama. A single short sentence for emphasis is fine; a run of them starts to sound engineered. A common sub-form is the anaphora ladder: three or more consecutive sentences sharing an identical opening ("It's about X. It's about Y. It's about Z."), spoken-rhetoric cadence on a page where the pauses don't exist.
 
 **Before:**
 > Then AlphaEvolve arrived. It had no preference for symmetry. No aesthetic prior. No nostalgia for human taste. The old rules were gone.
@@ -514,6 +514,135 @@ Before returning the final rewrite, scan it for `—` and `–`. Any hit means t
 > Whether it's worth the price depends on how often you'll use it.
 
 
+## MACHINE-ARTIFACT, STRUCTURAL, AND MODEL-SPECIFIC TELLS (2024-2026)
+
+These extend the list with machine artifacts, macro-structure, and model-specific tics that emerged or intensified in 2024-2026. Sources: the expanded [Wikipedia "Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) (markup and citation sections), 2025 model-style studies (the Washington Post's 330k-message emoji analysis; Scientific American on ChatGPT vs Gemini), and Geng & Trotta, "Human-LLM Coevolution" (arXiv 2502.09606). Weight the structural ones (bullet avalanche, burstiness) above any single word: vocabulary tells decay once they're named, structure decays slower.
+
+### 34. Machine-artifact / retrieval token leakage
+
+**Tokens to watch:** `:contentReference[oaicite:0]{index=0}`, `oai_citation`, `oaicite`, `contentReference`, `turn0search0`, `turn0news1`, `attributableIndex`, `grok_card`, a stray `+1` next to a claim.
+
+**Problem:** RAG and tool-using models leak internal citation and retrieval plumbing into pasted output. No human types these, so it's a near-zero-false-positive tell. Delete on sight, along with any hollow citation wrapped around it.
+
+**Before:**
+> The clinic opened in 2019 :contentReference[oaicite:3]{index=3} and serves three counties.
+
+**After:**
+> The clinic opened in 2019 and serves three counties.
+
+### 35. Markdown bleeding into a non-markdown surface
+
+**Problem:** The model emits its house format regardless of destination, so raw `**bold**`, `*italic*`, `[text](url)`, or `#` headers survive verbatim into a surface that can't render them: a plain-text ticket field, an email, a wiki on different markup.
+
+**Before (pasted into a plain-text field):**
+> `**Root cause:** the cache wasn't invalidated. See [the PR](https://...).`
+
+**After:**
+> Root cause: the cache wasn't invalidated. See the PR: https://...
+
+### 36. Skipped heading levels and decorative rules
+
+**Problem:** Two tics that treat structure as ornament: jumping H2 to H4 with no H3, and dropping a horizontal rule (`---`) right before every heading as decoration. Use real hierarchy; cut the ornamental rules.
+
+**Before:**
+> ## Overview
+> ---
+> #### Detailed findings
+
+**After:**
+> ## Overview
+> ## Findings
+
+### 37. Fabricated or decorative citation apparatus
+
+**Problem:** The text looks sourced but the apparatus is hollow: invalid DOIs, DOIs that resolve to an unrelated paper, references listed but never cited in the body, `utm_source=` params left on URLs, dead links. The shape of rigor without the substance. In technical writing the analog is fabricated ticket IDs, PR numbers, or file paths. Check that they resolve.
+
+**Before:**
+> Performance improved 40% (Smith et al., 2021, doi:10.1234/fake.5678).
+
+**After:**
+> Performance improved 40% in our load test (link to the run). Or drop the citation.
+
+### 38. Model-specific emoji fingerprint
+
+**Problem:** Past decorative emoji generally (§18), specific models over-emit a specific set at a measurable rate. ChatGPT (gpt-4o era) leans on ✅, 🧠, and the small blue diamond 🔹/💎; by mid-2025 most of its messages carried at least one. A cluster of these is a strong provenance tell, not just a style issue.
+
+**Before:**
+> Here's the plan: ✅ ship the fix 🧠 smart move 🔹 next steps below
+
+**After:**
+> Here's the plan. Ship the fix, then the next steps below.
+
+### 39. Stance-avoidance ("cover every angle")
+
+**Problem:** The piece gives context, then several perspectives, then a hedged "it depends on your needs," reading like a search-results summary rather than someone with a view. Common to Gemini. If the writer has a position, state it.
+
+**Before:**
+> There are several perspectives. On one hand... on the other hand... Ultimately, the best approach depends on your specific needs.
+
+**After:**
+> Use Postgres here. The write volume doesn't justify the operational cost of the alternative.
+
+### 40. Bullet avalanche where prose belongs
+
+**Problem:** Connected, argumentative prose flattened into a stack of one-sentence bullets (often nested) to simulate organization. The tell is choosing a list when the content is relational: the cause, contrast, or sequence between points is the actual content, and the bullets erase it.
+
+**Before:**
+> - The cache was cold
+> - Requests piled up
+> - Latency spiked
+> - Users left
+
+**After:**
+> The cache was cold, so requests piled up and latency spiked until users left.
+
+### 41. Uniform shape / low burstiness
+
+**Problem:** Every paragraph runs topic sentence, evidence, mini-summary; every section has the same number of subheadings; every list item is the same length. Human writing varies sentence and paragraph length, AI trends mechanically even. This is the statistical marker detectors actually score, and it's invisible if you only hunt phrase-level tells. Fix by letting length follow content: a two-sentence paragraph next to a seven-sentence one.
+
+### 42. Rhetorical question answered by its own next line
+
+**Problem:** Pose a question, then immediately answer it as a one-line reveal, manufacturing the look of insight across a gap the reader could cross unaided. (Distinct from §33: that's a fake-candid opener, this is a self-answered question.)
+
+**Before:**
+> So what does this mean for your team? It means faster shipping.
+
+**After:**
+> This means your team ships faster.
+
+### 43. Engagement-bait closers
+
+**Problem:** The piece ends by soliciting interaction: "What's your take?", "Drop a 🔥 if you agree", "Comment YES", "Tag someone who needs this", "Like for part 2." Throat-clearing in reverse. End when the content ends.
+
+**Before:**
+> ...and that's how we halved deploy time. What's YOUR biggest deploy headache? Drop it below 👇
+
+**After:**
+> ...and that's how we halved deploy time.
+
+### 44. Forced-slang overshoot
+
+**Words to watch:** chef's kiss, let that sink in, here's the tea, it's giving, the girlies, lock in, no cap, main-character energy, performative "lol."
+
+**Problem:** Reaching for social-media slang to sound human and landing in the uncanny valley: uniformly earnest, too relatable. The opposite failure from brochure-speak (§4); both are register mismatches, in different directions.
+
+**Before:**
+> The new dashboard? Chef's kiss. No cap, it's giving main-character energy.
+
+**After:**
+> The new dashboard is genuinely good. Load time dropped from 4s to under 1.
+
+### 45. Colon-drama and arrow tics
+
+**Problem:** As em-dash overuse gets suppressed (see Recalibration), the same dramatic-pause impulse leaks into other glyphs: a fragment, a colon, a payoff ("The result: chaos."), and literal `→` or `->` used as connective punctuation in prose ("fetch → transform → store") where a sentence belongs.
+
+**Before:**
+> Our goal: simplicity. The process: fetch → transform → store. The outcome: fewer bugs.
+
+**After:**
+> We wanted it simple. It fetches, transforms, and stores the data, so there are fewer bugs.
+
+
 ## DETECTION GUIDANCE
 
 ### What NOT to flag (false positives)
@@ -534,6 +663,16 @@ A clean human writer can hit several of the patterns above without any AI involv
 - **Correct, complex formatting.** Visual editors and templates produce clean output without any AI.
 
 When in doubt, look for **clusters** of tells, not isolated ones. A single em dash means nothing; em dashes plus rule-of-three plus *vibrant tapestry* plus a "Conclusion" section is a confession.
+
+
+### Recalibration (signals that have decayed since 2024)
+
+Some classic tells weakened as models and detectors co-evolved. Demote these; don't trigger on them alone.
+
+- **Em and en dashes (§14).** Models now actively *suppress* the em dash because it got famous, and plenty of humans use it. Treat it as a weak signal and corroborate with structure. The impulse has migrated to colons and `→` arrows (§45).
+- **"Delve," "intricate," "realm" (§7).** Measurably dropped after April 2024 once they were publicly outed; "delve" is now rare in fresh ChatGPT output. Keep them as legacy-era markers, don't weight them for 2025+ text.
+- **Excessive hedging (§24).** Also a genuine trait of careful humans and of Claude specifically. Use only when stacked with other tells.
+- **The vocabulary list is a depreciating asset.** High-signal words rotate by model release era: as "delve" fell, subtler markers like "significant," "core," and "modern" rose. When in doubt, weight the structural tells (§40, §41) over any single word, because structure decays slower than vocabulary.
 
 
 ### Signs of human writing (preserve these)
